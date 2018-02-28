@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>创建Chip8对象</title>
+</head>
+
+<body>
+    我们假设CHIP8只有:**处理器、键盘、显示屏与扬声器** 那么代码为:
+    <script>
+        (function () {
+            function CPU() {/*...*/ };
+            function Screen() {/*...*/ };
+            function Keyboard() {/*...*/ };
+            function Speaker(){/*...*/ };
+            window.CHIP8 = function () {
+                var c8 = new CPU();
+                c8.screen = new Screen();
+                c8.speaker = new Speaker();
+                c8.input = new Keyboard();
+                return c8;
+            };
+        })();
+    </script>
+</body>
+
+</html>

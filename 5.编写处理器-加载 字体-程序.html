@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <input type="file" id="f" />
+    <div id="demom"></div>
+    <script>
+        (function () {
+            function CPU() {
+                this.pc = 0x200;//CHIP8的程序都是从0x200地址开始的
+                this.stack = new Array;//堆栈指针
+                this.screen = { clear: function () { }, render: function () { }, setPixel: function () { } };//显示
+                this.input = { isKeyPressed: function (key) { }, clear: function () { } };//输入
+                this.speaker = { clear: function () { }, play: function () { }, stop: function () { } };//扬声器
+                this.v = new Uint8Array(16);//16个数据寄存器 V0~VF
+                this.i = 0;//地址寄存器
+                this.memory = new Uint8Array(4096);//4K内存
+                this.delayTimer = 0;//延时计时器
+                this.soundTimer = 0;//声音计时器
+                this.paused = false;//暂停
+                this.speed = 10;//运行速度
+
+                /**
+                 * 用默认值重置CPU的一些参数
+                 */
+                this.reset = function () {
+                    this.pc = 0x200;
+                    this.stack = new Array;
+                    this.v = new Uint8Array(16);
+                    this.i = 0;
+                    this.memory = new Uint8Array(4096);
+                    this.delayTimer = 0;
+                    this.soundTimer = 0;
+                    this.screen.clear();
+                    this.input.clear();
+                    this.speaker.clear();
+                    this.loadFonts();
+                    this.paused = false;
+                };
+
+                /**
+                 * 显示渲染
+                 */
+                this.render = function () { this.screen.render(); };
+
+                /**
+                 * 播放扬声器直到声音计时器达到零 
+                 */
+                this.playSound = function () {
+                    if (this.soundTimer > 0) {//只要soundTimer的值大于零，CHIP8蜂鸣器发声。
+                        this.speaker.play();
+                    } else {
+                        this.speaker.stop();
+                    }
+                }
+
+                /**
+                 * 更新CPU延迟和声音计时器 
+                 */
+                this.updateTimers = function () {
+                    if (this.delayTimer > 0) this.delayTimer -= 1;//递减至0
+                    if (this.soundTimer > 0) this.soundTimer -= 1;//递减至0
+                }
+
+                /**
+                 * 加载字体到chip8内存
+                 */
+                this.loadFonts = function () {
+                    var fonts = [
+                        0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+                        0x20, 0x60, 0x20, 0x20, 0x70, // 1
+                        0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+                        0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+                        0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+                        0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+                        0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+                        0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+                        0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+                        0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+                        0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+                        0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+                        0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+                        0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+                        0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+                        0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+                    ];
+                    for (var i = 0, length = fonts.length; i < length; i++) {
+                        this.memory[i] = fonts[i];
+                    }
+                };
+
+
+                /**
+                * 装程序到内存 
+                * @param {Array} program  二进制程序
+                */
+                this.loadProgram = function (program) {
+                    for (var i = 0, length = program.length; i < length; i++) {
+                        this.memory[0x200 + i] = program[i];
+                    }
+                }
+
+                /**
+                 * CPU 开始执行
+                 */
+                this.cycle = function () {/****/ };
+
+                /**
+                 * 一个给定的操作码的进行解析执行
+                 * @param {Integer} opcode
+                 */
+                this.perform = function (opcode) {/****/ }
+            };
+            function Screen() {/*...*/ };
+            function Keyboard() {/*...*/ };
+            function Speaker() {/*...*/ };
+            window.CHIP8 = function () {
+                var c8 = new CPU();
+                // c8.screen = new Screen();
+                // c8.speaker = new Speaker();
+                // c8.input = new Keyboard();
+                c8.rom=[];
+                return c8;
+            };
+        })();
+
+         var chip8 = CHIP8();
+         f.onchange = function () {
+            var fl = this.files[0]
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var arraybuffer = e.target.result;
+                chip8.reset();
+                chip8.rom=new Uint8Array(arraybuffer);
+                document.getElementById("demom").innerHTML=JSON.stringify(chip8.memory);
+                /**cpu 循环**/
+            }
+            reader.onerror = function (error) {
+            }
+            reader.readAsArrayBuffer(fl);
+        };
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    #### 1.内存 CHIP8基本是在一个有**4K内存**的系统上实现，也就是**4096个字节**。前**512(也就是从0x000到0x1ff)字节由CHIP8的解释器占据**。所以CHIP8的**程序都是从0x200地址开始**的。最顶上的**256个字(0xF00-0xFFF)**
+    用于显示刷新,在这下面的**96个字节** (0xEA0-0xEFF) 用于栈, 内部使用或者其他变量。 发展到今天，CHIP8的实现的话不需要使用的空间都可以不使用，也就是不用完全那么按照上面来。但是通常还是要在低**512字节 (0x000-0x200)**
+    存放**字体**数据。 ``` +---------------+= 0xFFF (4095) 结束 | | | | | | | | | | | 0x200 ~ 0xFFF | | CHIP8 | | 程序/数据 | | | | |
+    | | +- - - - - -+= 0x600 (1536) | | | | | | +---------------+= 0x200 (512) 程序开始 | 0x000 ~ 0x1FF | | 解释器 | +---------------+=
+    0x000 (0) CHIP8 内存开始 ``` #### 2.寄存器 CHIP8有16个通用8位数据寄存器，V0~VF。VF寄存器存放进位标识。还有一个地址寄存器叫做I，2个字节的长度。 程序计数器（PC）应该是16位的，是用来存放当前正在执行的地址，堆栈是16个16位值的数组，用于存放函数返回的地址值和保存一些数据。
+    <script>
+        (function () {
+            function CPU() {
+                this.pc = 0x200;//CHIP8的程序都是从0x200地址开始的
+                this.stack = new Array;//堆栈指针
+                this.screen = { clear: function () { }, render: function () { }, setPixel: function () { } };//显示
+                this.input = { isKeyPressed: function (key) { }, clear: function () { } };//输入
+                this.speaker = { clear: function () { }, play: function () { }, stop: function () { } };//扬声器
+                this.v = new Uint8Array(16);//16个数据寄存器 V0~VF
+                this.i = 0;//地址寄存器
+                this.memory = new Uint8Array(4096);//4K内存
+                this.delayTimer = 0;//延时计时器
+                this.soundTimer = 0;//声音计时器
+                this.paused = false;//暂停
+                this.speed = 10;//运行速度
+
+                /**
+                 * 用默认值重置CPU的一些参数
+                 */
+                this.reset = function () {
+                    this.pc = 0x200;
+                    this.stack = new Array;
+                    this.v = new Uint8Array(16);
+                    this.i = 0;
+                    this.memory = new Uint8Array(4096);
+                    this.delayTimer = 0;
+                    this.soundTimer = 0;
+                    this.screen.clear();
+                    this.input.clear();
+                    this.speaker.clear();
+                    this.loadFonts();
+                    this.paused = false;
+                };
+
+                /**
+                 * 显示渲染
+                 */
+                this.render = function () { this.screen.render(); };
+
+                /**
+                 * 播放扬声器直到声音计时器达到零 
+                 */
+                this.playSound = function () {
+                    if (this.soundTimer > 0) {//只要soundTimer的值大于零，CHIP8蜂鸣器发声。
+                        this.speaker.play();
+                    } else {
+                        this.speaker.stop();
+                    }
+                }
+
+                /**
+                 * 更新CPU延迟和声音计时器 
+                 */
+                this.updateTimers = function () {
+                    if (this.delayTimer > 0) this.delayTimer -= 1;//递减至0
+                    if (this.soundTimer > 0) this.soundTimer -= 1;//递减至0
+                }
+
+                /**
+                 * 加载字体到chip8内存
+                 */
+                this.loadFonts = function () {/****/ };
+
+
+                /**
+                * 装程序到内存 
+                * @param {Array} program  二进制程序
+                */
+                this.loadProgram = function (program) {/****/ };
+
+                /**
+                 * CPU 开始执行
+                 */
+                this.cycle = function () {/****/ };
+
+                /**
+                 * 一个给定的操作码的进行解析执行
+                 * @param {Integer} opcode
+                 */
+                 this.perform = function (opcode) {/****/}
+            };
+            function Screen() {/*...*/ };
+            function Keyboard() {/*...*/ };
+            function Speaker() {/*...*/ };
+            window.CHIP8 = function () {
+                var c8 = new CPU();
+                c8.screen = new Screen();
+                c8.speaker = new Speaker();
+                c8.input = new Keyboard();
+                return c8;
+            };
+        })();
+    </script>
+</body>
+
+</html>

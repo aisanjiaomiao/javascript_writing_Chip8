@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="log">
+
+    </div>
+    <script>
+        (function () {
+            function CPU() {/*...*/ };
+            function Screen() {/*...*/ };
+            function Keyboard() {
+                var keysPressed = [];//记录按下的按键
+
+                //处理下一个按键
+                this.onNextKeyPress = function () { }
+
+                //清空
+                this.clear = function () {
+                    keysPressed = [];
+                    this.onNextKeyPress = function () { }
+                }
+
+                //当前按键是否按下
+                this.isKeyPressed = function (property) {
+                    var key = Keyboard.MAPPING[property];
+                    return !!keysPressed[key];
+                }
+
+                var self = this;
+                this.keyDown = function (event) {
+                    var key = String.fromCharCode(event.which);
+                    keysPressed[key] = true;
+
+                    for (var property in Keyboard.MAPPING) {
+                        var keyCode = Keyboard.MAPPING[property];
+                        if (keyCode == key) {
+                            try {
+                                self.onNextKeyPress(parseInt(property),keyCode);
+                            } finally {
+                                self.onNextKeyPress = function () { }
+                            }
+                        }
+                    }
+                }
+
+                this.keyUp = function (event) {
+                    var key = String.fromCharCode(event.which);
+                    keysPressed[key] = false;
+                }
+
+                window.addEventListener("keydown", this.keyDown, false);//绑定键盘按下时间
+                window.addEventListener("keyup", this.keyUp, false);//绑定键盘弹起时间
+            };
+            //自定义键盘按键对应Chip8输入值
+            Keyboard.MAPPING = {
+                0x1:"1",
+                0x2:"2",
+                0x3:"3",
+                0xC:"4",
+                0x4:"Q",
+                0x5:"W",
+                0x6:"E",
+                0xD:"R",
+                0x7:"A",
+                0x8:"S",
+                0x9:"D",
+                0xE:"F",
+                0xA:"Z",
+                0x0:"X",
+                0xB:"C",
+                0xF:"V"
+            }
+            function Speaker() {/*...*/ };
+            window.CHIP8 = function () {
+                var c8 = new CPU();
+                c8.screen = new Screen();
+                c8.speaker = new Speaker();
+                c8.input = new Keyboard();
+                return c8;
+            };
+        })();
+
+        var chip8 = CHIP8();
+        //======= 
+        var isKeyDown = false;
+        window.addEventListener("keydown", () => {
+            isKeyDown = true;
+        }, false);//绑定键盘按下时间
+        window.addEventListener("keyup", () => {
+            isKeyDown = false;
+        }, false);//绑定键盘弹起时间
+        setInterval(() => {
+            if (isKeyDown) {
+                chip8.input.onNextKeyPress = function (key,keyCode) {
+                    console.log(key);
+                    document.getElementById("log").innerHTML+=(key+" -- "+keyCode+"<br/>")
+                };
+            }
+        }, 1000 / 60);//60赫兹计时器
+        // .bind(chip8);;
+    </script>
+</body>
+
+</html>

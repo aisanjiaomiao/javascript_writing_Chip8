@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>编写扬声器</title>
+</head>
+
+<body>
+
+    频率：
+    <input type="range" id="frequency" value="440" min="100" max="1000">
+    <label id="showfv">(440)</label>
+    <button id="play_btn">播放</button>
+    <script>
+        (function () {
+            function CPU() {/*...*/ };
+            function Screen() {/*...*/ };
+            function Keyboard() {/*...*/ };
+            function Speaker() {
+                var contextClass = (window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.oAudioContext || window.msAudioContext)
+                    , context
+                    , oscillator
+                    , gain;
+                if (contextClass) {
+                    context = new contextClass();
+                    gain = context.createGain();
+                    gain.connect(context.destination);
+                }
+                //播放声音
+                this.play = function (frequency) {
+                    //API https://developer.mozilla.org/en-US/docs/Web/API/OscillatorNode
+                    //示例 https://mdn.github.io/violent-theremin/
+                    if (context && !oscillator) {
+                        oscillator = context.createOscillator();
+                        oscillator.frequency.value = frequency || 440;//声音频率 
+                        oscillator.type = oscillator.TRIANGLE;//波形这里用的是三角波 查看示例：https://codepen.io/gregh/pen/LxJEaj
+                        oscillator.connect(gain);
+                        oscillator.start(0);
+                    }
+                }
+                //停止播放
+                this.clear = this.stop = function () {
+                    if (oscillator) {
+                        oscillator.stop(0);
+                        oscillator.disconnect(0);
+                        oscillator = null;
+                    }
+                }
+            };
+            window.CHIP8 = function () {
+                var c8 = new CPU();
+                c8.screen = new Screen();
+                c8.speaker = new Speaker();
+                c8.input = new Keyboard();
+                return c8;
+            };
+        })();
+
+        var chip8 = CHIP8();
+        //=======
+        var f = document.getElementById("frequency");
+        var isPlay = false;
+        var play_btn = document.getElementById("play_btn");
+        f.onchange = function () {
+            var v = Number(this.value);
+            document.getElementById("showfv").innerHTML = "(" + v + ")";
+            if (isPlay) {
+                chip8.speaker.stop();
+                chip8.speaker.play(v);
+            }
+        };
+        play_btn.onclick = function () {
+            isPlay = !isPlay;
+            this.innerHTML = isPlay ? '停止' : '播放';
+            if (!isPlay) chip8.speaker.stop();
+            else chip8.speaker.play(f.value);
+        };
+    </script>
+</body>
+
+</html>
